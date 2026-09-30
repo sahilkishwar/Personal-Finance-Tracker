@@ -24,7 +24,7 @@ export function useFinance() {
       setBudgets(buds);
       setSummary(sum);
     } catch {
-      setError('Cannot connect to backend. Make sure Spring Boot is running on port 8082.');
+      setError('Cannot connect to backend. Make sure Spring Boot is running on port 8083.');
     } finally {
       setLoading(false);
     }

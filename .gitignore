@@ -4,3 +4,10 @@ target/
 .env
 .DS_Store
 *.class
+
+# Eclipse & IDE files
+**/.classpath
+**/.project
+**/.settings/
+**/.vscode/
+

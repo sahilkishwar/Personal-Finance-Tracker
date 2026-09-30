@@ -6,65 +6,94 @@ import com.example.financetracker.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transactions")
-@CrossOrigin(origins = "http://localhost:5174")
+@CrossOrigin(origins = "*")
 public class TransactionController {
 
+    private final TransactionService transactionService;
+
     @Autowired
-    private TransactionService service;
+    public TransactionController(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
 
     @GetMapping
-    public List<Transaction> getAll() { return service.getAll(); }
+    public ResponseEntity<List<Transaction>> getAllTransactions() {
+        List<Transaction> transactions = transactionService.getAllTransactions();
+        return ResponseEntity.ok(transactions);
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Transaction> getById(@PathVariable Long id) {
-        return service.getById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
+        return transactionService.getTransactionById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/month")
-    public List<Transaction> getByMonth(@RequestParam int month, @RequestParam int year) {
-        return service.getByMonthAndYear(month, year);
+    public ResponseEntity<List<Transaction>> getTransactionsByMonth(
+            @RequestParam("month") int month,
+            @RequestParam("year") int year) {
+        List<Transaction> transactions = transactionService.getTransactionsByMonthAndYear(month, year);
+        return ResponseEntity.ok(transactions);
     }
 
     @GetMapping("/type/{type}")
-    public List<Transaction> getByType(@PathVariable TransactionType type) {
-        return service.getByType(type);
+    public ResponseEntity<List<Transaction>> getTransactionsByType(@PathVariable String type) {
+        try {
+            TransactionType transactionType = TransactionType.valueOf(type.toUpperCase());
+            List<Transaction> transactions = transactionService.getTransactionsByType(transactionType);
+            return ResponseEntity.ok(transactions);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/category/{category}")
-    public List<Transaction> getByCategory(@PathVariable String category) {
-        return service.getByCategory(category);
+    public ResponseEntity<List<Transaction>> getTransactionsByCategory(@PathVariable String category) {
+        List<Transaction> transactions = transactionService.getTransactionsByCategory(category);
+        return ResponseEntity.ok(transactions);
     }
 
     @GetMapping("/summary")
-    public Map<String, Double> getSummary(@RequestParam int month, @RequestParam int year) {
-        double income = service.getTotalByTypeAndMonth(TransactionType.INCOME, month, year);
-        double expense = service.getTotalByTypeAndMonth(TransactionType.EXPENSE, month, year);
-        return Map.of(
-            "income", income,
-            "expense", expense,
-            "balance", income - expense
-        );
+    public ResponseEntity<Map<String, Double>> getSummary(
+            @RequestParam("month") int month,
+            @RequestParam("year") int year) {
+        double income = transactionService.calculateTotalIncome(month, year);
+        double expense = transactionService.calculateTotalExpense(month, year);
+        double balance = income - expense;
+
+        Map<String, Double> summary = new HashMap<>();
+        summary.put("income", income);
+        summary.put("expense", expense);
+        summary.put("balance", balance);
+
+        return ResponseEntity.ok(summary);
     }
 
     @PostMapping
-    public Transaction create(@RequestBody Transaction t) { return service.save(t); }
+    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
+        Transaction savedTransaction = transactionService.saveTransaction(transaction);
+        return ResponseEntity.ok(savedTransaction);
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Transaction> update(@PathVariable Long id, @RequestBody Transaction t) {
-        return service.getById(id).map(existing -> {
-            t.setId(id);
-            return ResponseEntity.ok(service.save(t));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Transaction> updateTransaction(
+            @PathVariable Long id,
+            @RequestBody Transaction transactionDetails) {
+        Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
+        return ResponseEntity.ok(updatedTransaction);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+        transactionService.deleteTransaction(id);
+        return ResponseEntity.ok().build();
     }
 }
