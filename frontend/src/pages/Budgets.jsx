@@ -48,7 +48,7 @@ export default function Budgets({ budgets, transactions, month, year, refresh })
                   <div key={b.id} className="budget-manage-item">
                     <span className="budget-dot" style={{ backgroundColor: CATEGORY_COLORS[b.category] || '#adb5bd' }} />
                     <span>{b.category}</span>
-                    <span style={{ marginLeft: 'auto', color: 'var(--accent-green)' }}>{formatCurrency(b.limit)}</span>
+                    <span style={{ marginLeft: 'auto', color: 'var(--accent-green)' }}>{formatCurrency(b.limit || b.limitAmount || 0)}</span>
                     <button className="tx-delete" onClick={() => handleDelete(b.id)} title="Delete">🗑️</button>
                   </div>
                 ))}

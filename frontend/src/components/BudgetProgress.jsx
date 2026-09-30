@@ -22,9 +22,10 @@ export default function BudgetProgress({ budgets, transactions }) {
       ) : (
         <div className="budget-list">
           {budgets.map(b => {
+            const bLimit = b.limit || b.limitAmount || 0;
             const spent = spending[b.category] || 0;
-            const pct = Math.min((spent / b.limit) * 100, 100);
-            const over = spent > b.limit;
+            const pct = bLimit > 0 ? Math.min((spent / bLimit) * 100, 100) : 0;
+            const over = spent > bLimit;
             const color = CATEGORY_COLORS[b.category] || '#adb5bd';
 
             return (
@@ -35,7 +36,7 @@ export default function BudgetProgress({ budgets, transactions }) {
                     {b.category}
                   </span>
                   <span className={`budget-amounts ${over ? 'over' : ''}`}>
-                    {formatCurrency(spent)} / {formatCurrency(b.limit)}
+                    {formatCurrency(spent)} / {formatCurrency(bLimit)}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -46,7 +47,7 @@ export default function BudgetProgress({ budgets, transactions }) {
                 </div>
                 <div className="budget-footer">
                   <span className={over ? 'text-danger' : 'text-muted'}>
-                    {over ? `⚠️ Over by ${formatCurrency(spent - b.limit)}` : `${formatCurrency(b.limit - spent)} remaining`}
+                    {over ? `⚠️ Over by ${formatCurrency(spent - bLimit)}` : `${formatCurrency(bLimit - spent)} remaining`}
                   </span>
                   <span className="budget-pct">{pct.toFixed(0)}%</span>
                 </div>
